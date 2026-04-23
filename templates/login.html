@@ -1,0 +1,26 @@
+{% extends "layout.html" %}
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-5">
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <h4 class="card-title text-center mb-4">登录 / 注册</h4>
+                <form method="POST">
+                    <div class="mb-3">
+                        <label>用户名</label>
+                        <input type="text" name="username" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label>密码</label>
+                        <input type="password" name="password" class="form-control" required>
+                    </div>
+                    <div class="d-grid gap-2">
+                        <button type="submit" name="action" value="login" class="btn btn-primary">登录</button>
+                        <button type="submit" name="action" value="register" class="btn btn-secondary">注册新账号</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

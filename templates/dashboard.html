@@ -1,0 +1,90 @@
+{% extends "layout.html" %}
+{% block content %}
+<div class="row">
+    <div class="col-md-4">
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-primary text-white">新建定时服务</div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <label>定时类型</label>
+                    <select id="timerType" class="form-select">
+                        <option value="once">一次性 (秒)</option>
+                        <option value="daily">周期性 (每天指定时间)</option>
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label>设定值 <small class="text-muted" id="valueHint">(1-86400秒)</small></label>
+                    <input type="text" id="timerValue" class="form-control" placeholder="例如: 10">
+                </div>
+                <div class="mb-3">
+                    <label>回调通知地址 (Webhook URL)</label>
+                    <input type="url" id="callbackUrl" class="form-control" placeholder="http://your-api.com/notify">
+                </div>
+                <button onclick="createTimer()" class="btn btn-success w-100">订阅定时器</button>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-8">
+        <div class="card shadow-sm">
+            <div class="card-header bg-secondary text-white">我的定时器状态 (刷新页面更新)</div>
+            <div class="card-body">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>ID</th><th>类型</th><th>设定值</th><th>回调地址</th><th>当前状态</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for timer in timers %}
+                        <tr>
+                            <td>{{ timer.id }}</td>
+                            <td>{{ '一次性' if timer.timer_type == 'once' else '每天' }}</td>
+                            <td>{{ timer.target_value }} {{ '秒后' if timer.timer_type == 'once' else '' }}</td>
+                            <td class="text-truncate" style="max-width: 150px;" title="{{ timer.callback_url }}">{{ timer.callback_url }}</td>
+                            <td>
+                                {% if 'Pending' in timer.status %} <span class="badge bg-warning text-dark">等待触发</span>
+                                {% elif 'Success' in timer.status %} <span class="badge bg-success">已触发成功</span>
+                                {% else %} <span class="badge bg-danger">触发失败</span> {% endif %}
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr><td colspan="5" class="text-center">您还没有设置任何定时器。</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.getElementById('timerType').addEventListener('change', function() {
+        document.getElementById('valueHint').innerText = this.value === 'once' ? '(1-86400秒)' : '(格式 HH:MM，如 14:30)';
+        document.getElementById('timerValue').placeholder = this.value === 'once' ? '例如: 10' : '例如: 14:30';
+    });
+
+    function createTimer() {
+        const payload = {
+            type: document.getElementById('timerType').value,
+            value: document.getElementById('timerValue').value,
+            callback_url: document.getElementById('callbackUrl').value
+        };
+
+        fetch('/api/timers', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(payload)
+        })
+        .then(response => response.json().then(data => ({status: response.status, body: data})))
+        .then(res => {
+            if (res.status === 201) {
+                alert('定时器订阅成功！');
+                location.reload(); // 刷新页面查看列表
+            } else {
+                alert('错误: ' + res.body.error);
+            }
+        });
+    }
+</script>
+{% endblock %}
